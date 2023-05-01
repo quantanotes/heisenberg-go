@@ -2,77 +2,50 @@ package store
 
 import (
 	"context"
-	"fmt"
 	"heisenberg/internal"
 	"heisenberg/internal/pb"
+	"heisenberg/log"
 )
 
 type StoreServer struct {
-	id      string
-	shardId string
-	master  bool
-	store   store
-	shard   *shard
-	replica *replica
+	id    string
+	store store
 }
 
-func (s *StoreServer) Close() {
-
+func RunStoreServer(ctx context.Context, addr string) {
+	m := &StoreServer{}
+	go internal.Serve(ctx, addr, m)
 }
 
+func (s *StoreServer) Ping(ctx context.Context, req *pb.Empty) (*pb.Pong, error) {
+	pong := &pb.Pong{
+		Id:      s.id,
+		Master:  false,
+		Service: uint32(internal.StoreService),
+		Shard:   nil,
+	}
+	return pong, nil
+}
+
+// Handshake between other compute nodes
 func (s *StoreServer) ConnectNode(ctx context.Context, req string) error {
-	c, err := NewStoreClient(ctx, req)
-	if err != nil {
-		return fmt.Errorf("ConnectNode error %v", err)
-	}
-
-	pong, err := c.Ping(ctx)
-	if err != nil {
-		return fmt.Errorf("ConnectNode error %v", err)
-	}
-
-	switch pong.Service {
-	case uint32(internal.StoreService):
-		shard := pong.Shard
-		replica := pong.Replica
-
-		// If master add as shard, if shard add as replica
-		if s.master {
-			s.shard.addReplica()
-		} else {
-
-		}
-		return nil
-	default:
-		return internal.InvalidServiceError()
-	}
+	return nil
 }
 
-func (s *StoreServer) Get(ctx context.Context, req *pb.Key) (*pb.Value, error) {
+func (s *StoreServer) Get(ctx context.Context, req *pb.Key) (*pb.Pair, error) {
 	key := req.Key
 	collection := req.Collection
-	var res *pb.Value
-	if s.master {
-		shard, err := s.shard.getShard(key)
-		if err != nil {
-			return nil, err
-		}
-		// Select random replica of given shard
-		client, err := shard.choose()
-		if err != nil {
-			return nil, err
-		}
-		res = client.Get(key, collection)
-	} else {
-		var err error
-		res, err = s.store.get(key, collection)
-		if err != nil {
-			return nil, err
-		}
+	_, err := s.store.get(key, collection)
+	if err != nil {
+		log.LogErrNilReturn[pb.Pair]("Get", err)
 	}
-	return res, nil
+	return nil, nil // TODO
 }
 
-func (s *StoreServer) Put() {
+func (s *StoreServer) Put(ctx context.Context, req *pb.Pair) (*pb.Empty, error) {
+	return nil, nil
+}
 
+func (s *StoreServer) Delete(ctx context.Context, req *pb.Key) (*pb.Empty, error) {
+	return nil, nil
 }
