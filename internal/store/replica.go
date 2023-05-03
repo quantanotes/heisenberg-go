@@ -2,16 +2,25 @@ package store
 
 import (
 	"fmt"
+	"heisenberg/internal"
 	"math/rand"
 )
 
 // Interface for handling replication
 type replica struct {
+	Ids     []string
 	clients map[string]*StoreClient
 }
 
-func (r *replica) addReplica(c *StoreClient, id string) {
+func (r *replica) addReplica(c *StoreClient, id string) error {
+	if c == nil {
+		return internal.NilClientError()
+	}
 	r.clients[id] = c
+	if !internal.Contains(r.Ids, id) {
+		r.Ids = append(r.Ids, id)
+	}
+	return nil
 }
 
 // Choose random replicas to distribute read requests evenly

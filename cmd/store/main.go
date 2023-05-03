@@ -4,26 +4,43 @@ import (
 	"context"
 	"flag"
 	"heisenberg/internal/store"
-	"heisenberg/internal/store/master"
 	"heisenberg/log"
 )
 
 func main() {
 	masterPtr := flag.Bool("m", false, "set if master node")
 	hostPtr := flag.String("h", "", "host name for node")
+	dirPtr := flag.String("dir", "", "directory of storage data files")
+	idPtr := flag.String("id", "", "id of node")
 	ctx := context.Background()
 
 	flag.Parse()
 
-	log.Info("@Main Heisenberg Store", nil)
+	log.Info("@store/Main", nil)
 
 	if *hostPtr == "" {
-		log.Fatal("Host not specified", nil)
+		log.Fatal("host not specified", nil)
+	}
+
+	if *dirPtr == "" {
+		log.Fatal("directory not specified", nil)
 	}
 
 	if *masterPtr {
-		master.RunStoreMasterServer(ctx, *hostPtr)
+		m, err := store.NewStoreMasterServer(*dirPtr)
+		if err != nil {
+			log.Fatal(err.Error(), nil)
+			panic(nil)
+		}
+		defer m.Close()
+		m.Run(ctx, *hostPtr)
 	} else {
-		store.RunStoreServer(ctx, *hostPtr)
+		s, err := store.NewStoreServer(*dirPtr, *idPtr)
+		if err != nil {
+			log.Fatal(err.Error(), nil)
+			panic(nil)
+		}
+		defer s.Close()
+		s.Run(ctx, *hostPtr)
 	}
 }
