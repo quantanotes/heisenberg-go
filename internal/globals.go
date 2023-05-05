@@ -22,3 +22,11 @@ func (s Service) String() string {
 	}
 	return serviceNames[s]
 }
+
+type SpaceType int
+
+const (
+	Ip     SpaceType = 1
+	Cosine SpaceType = 2
+	L2     SpaceType = 3
+)

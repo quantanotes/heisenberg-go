@@ -1,7 +1,11 @@
 package index
 
+import (
+	"heisenberg/internal"
+)
+
 type index interface {
-	init() error
+	init(space internal.SpaceType, dim int, max int) error
 	close() error
 	load() error
 	save() error
