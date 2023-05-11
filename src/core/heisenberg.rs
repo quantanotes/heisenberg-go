@@ -125,6 +125,10 @@ impl<S: Store> Heisenberg<S> {
             .map_err(|e| HeisenbergError::Error(e.to_string()))
     }
 
+    pub fn put_many(&mut self, collection_name: &str, entries: Vec<Entry>) -> Result<(), HeisenbergError> {
+        todo!()
+    }
+
     pub fn delete(&mut self, collection_name: &str, key: &str) -> Result<(), HeisenbergError> {
         let collection = self.collections
             .get_mut(collection_name)
@@ -151,8 +155,7 @@ impl<S: Store> Heisenberg<S> {
             .and_then(|c| {
                 let indices = c.index
                     .search(query, k)
-                    .map_err(|e| HeisenbergError::Error(e.to_string()))
-                    .map(|i| i.0)?;
+                    .map_err(|e| HeisenbergError::Error(e.to_string()))?;
 
                 self.get_many(collection_name, indices)
             })

@@ -9,7 +9,7 @@ impl Collection {
     pub fn new(name: &str, index: Box<dyn Index>) -> Collection {
         Collection {
             name: name.to_string(),
-            index,
+            index: index,
         }
     }
 }
